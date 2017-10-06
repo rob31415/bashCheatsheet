@@ -1,0 +1,464 @@
+___________________________________________________________
+files / filesys:
+
+ls -ltc
+ls -lha
+ls -lhatr
+
+locate bla | xargs ls -l
+
+mount -o remount,rw /
+cat /proc/mounts
+
+ramdisk:
+mount tmpfs somedir -t tmpfs -o size=xxm
+
+windows:
+mount -t cifs -o username=sepp //192.168.100.150/abs-temp/mnt/abs-temp/
+
+bind:
+mount --rbind ${SOURCE} ${TARGET}
+
+grep -i -r blabla filename
+grep -rnw './' -e "public t_Entry" --include=\*.{cpp,h}
+
+ln -s ${TARGET} ${LINKNAME}
+HL:
+filename1
+filename2 --> inode --> data
+SL:
+filename2 --> inode --> data ("ptrto filename1") --> filename1 --> inode --> data
+"rm fn1": HL still works, SL doesn't
+
+
+file - determine file type (32 or 64 bit, elf, etc.)
+which - locate a command
+whereis - locate the binary, source, and manual page files for a command
+watch - execute a program periodically, showing output fullscreen
+
+du -hs *
+du -skh .[A-z]* * | sort -n
+
+only dirs
+ls -l | grep `^d'
+
+
+ps aux --sort -rss
+
+find and copy:
+find -name *.pdf|xargs cp -t .
+
+___________________________________________________________
+development info:
+
+ldd - print shared library dependencies (-d for dynamic so)
+readelf -d some.exe - print dependencies
+nm - list symbols from object files
+objdump -T some.exe - list imported symbols
+strings - print the strings of printable characters in files.
+strace - trace system calls and signals
+ld - The GNU linker
+
+unset LANG
+unset LL_ALL
+
+ipcs -q
+ipcrm -q id
+
+see .so files in a .a file: ar t someLibArchive.a
+
+___________________________________________________________
+sys info:
+
+cat /etc/network/interfaces
+cat /dhcpd3/dhcpdconf
+
+/etc/dhcp3/dhcpd.conf
+/etc/dhcp3/terminals.conf
+/var/lib/dhcpd/dhcpdleases
+
+/etc/init.d/network restart
+ifconfig eth0 down
+
+/etc/init.d
+/etc/fstab
+/boot/grub/menu.lst
+
+lsusb
+lspci
+
+kernel:
+
+uname -a
+
+modprobe -l
+/lib/modules
+rules.d/70-*
+
+ifconfig -a
+
+less /proc/bus/usb/devices
+lsusb -d xxxx:xxxx -v
+
+ethtool
+/etc/pam.d
+cat /etc/passwd
+
+xlsatoms
+xprop
+wmctrl -r 'windowname' -b add,above
+
+fuser
+lsof -i TCP
+lsof ausgabe: CMD, PID, USER, FILEDESCRIPTOR (number or symb+node+lock), FILETYPE, DEVICE, SIZE, NODE, PROCESSNAME
+
+cat /var/log/Xorg.0.log | grep -r "(EE)\|(WW)"
+cat /dev/null > somefile
+
+ps faux
+vsz virtual size in Kbytes (alias vsize)
+rss The real memory (resident set) size of the process (in 1024 byte units).
+
+D Uninterruptible sleep (usually IO)
+R Running or runnable (on run queue)
+S Interruptible sleep (waiting for an event to complete)
+T Stopped, either by a job control signal or because it is being traced.
+W paging (not valid since the 2.6.xx kernel)
+X dead (should never be seen)
+Z Defunct ("zombie") process, terminated but not reaped by its parent.
+
+< high-priority (not nice to other users)
+N low-priority (nice to other users)
+L has pages locked into memory (for real-time and custom IO)
+s is a session leader
+l is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)
++ is in the foreground process group
+
+
+kill -s 9 PID
+
+dump process mem:
+cat /proc/[pid]/maps
+gdb --pid [pid]
+dump memory /root/output 0x00621000 0x00622000
+
+___________________________________________________________
+networking:
+
+tunneling:
+ssh -L 5900:10.120.150.30:5900 username@125.255.50.60
+vnc->localhost:5900
+
+SSH -L 123:localhost:456 sshserver
+SSHclient --123-->  | ---456---> sshserver w/ localhost
+
+SSH -L 123:remotesvr:456 sshserver
+SSHclient --123-->  | sshserver | 456 remotesvr
+
+traceroute
+nmap
+
+check if an upd port is open
+sudo nmap -sU -p 8081 hostIpOrHostname
+
+route add default gw 192.168.100.20
+
+netcat:
+rx: "nc -l -p 10009" tx from another computer: "echo 'bla' | netcat 192.168.115.1 10009"
+netcat udp:
+nc -luv 6661 #server
+echo '48454c4c6f'|xxd -r -p|netcat -u 127.0.0.1 6661
+
+on liner static content webserver
+while true; do echo -e "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n" | cat - SOME.html  | nc -l -p 2017; done;
+
+echo -en \\x00\\x00\\x00\\x04\\x01\\x02\\x03\\x04 > bla.dat
+
+printf "GET /bla\r\n\r\n" |nc -i 1 10.127.2.13 8080
+
+ip traffic:
+jnettop
+iptraf
+iftop -P
+
+which process has which IP conn:
+sudo netstat -tuapn
+
+find port and dump input on terminal:
+sudo netstat -np|grep 45456
+nc -l 10.115.3.253 45456
+
+sudo tcpdump -i eth1 udp port 50004 -vv -X
+
+___________________________________________________________
+bash:
+
+cmd &> /dev/null
+1>&2
+2>&1
+
+find / -name "*.txt" -type f -print -exec grep -H "suchtext" {} \;
+find -iname "*.js?" | xargs grep -iR "suchtext"
+
+nano /sys/devices/system/cpt/cpu0/cpufreq/scaling-governor
+"ondemand" oder "performance"
+/proc/cpuinfo
+
+
+~/.bash_history
+
+while true ; do /etc/init.d/absclient start ; sleep 15 ; /etc/init.d/absclient stop ; sleep 4; done
+echo blabla >> somefile
+
+
+/etc/init.d/absclient start
+/opt/abs-startup-scripts/
+
+
+prompt: PS1 in /etc/profile
+
+color output of compile error:
+make 2>&1 | sed -e 's/error:/\ \033[0;31m ERR \033[0m /g'
+doesnt work yet, because needs echo to interpret the color codes
+
+___________________________________________________________
+gentoo:
+
+rc-update show
+rc-update add pcscd default
+rc-update remove ...
+nano /etc/init.d/localmount
+
+glxinfo
+equery f xnee
+
+/root/.fluxbox
+
+in chroot:
+/usr/src/lsmax
+make menuconfig
+
+"make $$ ake install modules modules_install"
+
+echo "=blabla ~x86" >> /etc/portage/package.keywords
+quickpkg --include -config=y blabla
+/usr/portage/packages/...
+
+alsamixer -c0
+
+/etc/conf.d/pcsc*
+
+export PAGER='less -s -R'
+
+
+___________________________________________________________
+tar:
+
+pack:
+tar cjpf ../abs_home.tar.bz2 . --exclude ".svn" --exclude "xulrunner"
+tar -zcvf archive_name.tar.gz directory_to_compress
+
+list:
+tar jtvf abs_home.tar.bz2
+
+unpack:
+tar xjpf abs_home.tar.bz2
+tar -zxvf archive_name.tar.gz
+tar xjrf bla.tbz2 -C /
+
+tarpipe:
+cat somefile.tbz2 | ssh IP "tar -xjp -C /"
+tar cjpf - . --exclude ".svn" --exclude "xulrunner" | ssh IP "tar -xjp -C /home/abs/abs-client"
+
+tarcopy:
+tar -cf - <source directory> | (cd /<target directory>;tar -xf -)
+
+___________________________________________________________
+PXE:
+
+pxe-boot-server (20.230):
+gethostip
+/var/lib/tftpboot/pxelinux.cfg/
+
+
+nfs-server (20.232):
+/home/linuximage-boot/images
+192.168.20.232:/home/linuximage-boot/AAA-Install/subscripts
+
+__________________________________________________________
+MISC:
+
+strings /usr/lib/nsbrowser/plugins/libflashplayer.so | grep "LNX"
+date -s "10/20/2000 18:45:01"
+cat /proc/meminfo
+vmstat
+head -2 /proc/slabinfo; cat /proc/slabinfo | egrep dentry\|inode
+/proc/sys/vm/...
+cat /proc/$PROC_ID/status
+cat /proc/$PROC_ID/smaps
+
+screen:
+list: screen -ls
+create or reattach to: screen -R rob
+detach: ctrl-a d
+new win: ctrl-a c
+kill win: ctrl-a k
+next/prev/jumpto win: ctrl-a n/p/[num]
+win selection: ctrl-a "
+win list: ctrl-a w
+monitor activity on/off: ctrl-a M
+monitor silence on/off: ctrl-a _
+set win name: ctrl-a A
+scroll: ctrl-a ESC
+leave scroll: ESC
+
+see binary data: od -v -w16 -tfD somefile
+
+resize image folder:
+mogrify -resize 600x400 -quality 100 -path ./resized/ *.jpg
+
+___________________________________________________________
+CVS:
+
+update to rev:
+cvs up -r revision filename
+
+whats going on:
+cvscheck
+
+get from server, dont merge:
+maybe delete file
+cvs update -C
+
+unstickie-fy files:
+cvs up -r HEAD
+cvs up -A
+
+
+
+___________________________________________________________
+catv4 build:
+
+catdb make
+tools make dep; make
+catkernel make
+axio2 make; make allpc
+catcontrol qmake; make -j4
+catview make
+
+build kernelmodules:
+cd thissite/i386
+sh do2.4.30_smp.sh
+update_appl2003.sh
+reboot
+/etc/init.d/postfix stop
+
+build axio completely:
+make_axioii.sh
+
+burn kernel & ramdisk includes kernelmodules transfer to axio
+
+make desk-sw completely (everything except axio):
+make_cat180.sh
+
+make desk software:
+make_cat180.sh
+ssh root@deska
+ua_cat180.sh doit
+reboot
+update_hella.sh doit
+reboot
+
+note:
+'make catdb' (or 'make generatedb' if you have no database)
+
+
+___________________________________________________________
+ubuntu:
+
+update:
+apt-get update
+apt-get upgrade
+
+where are files installed:
+dpkg -L packetname
+
+disable touchpad:
+xinput set-prop 12 "Device Enabled" 0
+xinput --disable 12
+
+
+___________________________________________________________
+xrandr:
+
+sudo xrandr --output HDMI1 --primary
+sudo xrandr --output eDP1 --right-of HDMI1
+xrandr --output eDP1 --mode 1920x1080
+setxkbmap de
+
+
+___________________________________________________________
+sefo.sh
+
+#! /bin/bash
+
+if [ -z $1 ] 
+then
+	echo "SEach FOr code in current folder. usage: sefo.sh searchstring [-i] [-w] - i=ignore case, w=word"
+else
+	grep -rn './' -e "$1" $2 $3 --exclude=\*#* --include=\*.{c*,h,t*}|less -S
+fi
+
+
+___________________________________________________________
+git
+
+create new branch and take uncommitted changes over:
+git checkout -b newBranch
+
+revert from unstaged changes to last commit, do something, and redo changes:
+git stash   # save current changes to "stash" stack
+git checkout .
+... do something ...
+git stash apply   # pop changes from stash stack and apply them right here
+
+
+___________________________________________________________
+ZFS
+
+creating zfs on a single hdd (linux):
+
+zpool create -f YOURPOOLNAME /dev/sdX
+zfs create YOURPOOLNAME/YOURNAME
+
+mount: sudo zpool import -fa or zpool import YOURPOOLNAME
+unmount: sudo zpool export YOURNAME
+
+list all pools: (first do: zpool import -fa):
+zfs list
+
+
+gdb
+___________________________________________________________
+
+compile with -g (CFLAGS =-g in Makefile)
+gdb executable.exe -tui
+run SOME_PRG_ARGS > redirectStdOutHere.somefile
+
+backtrace
+
+list sourcefile.c:5
+
+b someSourcfile.cpp:5  (breakpoint)
+clear 5 (remove breakpoint at line)
+n (for next)
+s (step into)
+c (continue)
+ctrl-C (stop wherever execution currently is)
+
+print someVarInScope
+
+disp someVarInScope
+undisplay Number
+
+RETURN repeats last command and TAB-completion exists
