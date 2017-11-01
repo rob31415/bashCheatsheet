@@ -42,15 +42,41 @@ du -skh .[A-z]* * | sort -n
 only dirs
 ls -l | grep `^d'
 
+nfs:
+sudo aptitude install nfs-kernel-server
+/etc/exports
+	/some-shared-dir   192.168.*.*(sync,rw,no_root_squash,no_all_squash)
+mount -t nfs 192.168.x.y:/some-shared-dir /home/abs/ -o nolock
 
 ps aux --sort -rss
 
 find and copy:
 find -name *.pdf|xargs cp -t .
 
+find files modified after "make install":
+find / -cmin -1 | grep -v /dev | grep -v /proc
+
+get rid of .svn dirs:
+rm -rf `find . -type d -name .svn`
+
+
+mount hd-image:
+fdisk -l hd.img
+kpartx -av hd.img
+ls /dev/mapper
+mkdir /media/hd
+mount /dev/mapper/loop0p5 /media/hd -o loop,ro
+umount /media/hd
+kpartx -dv hd.img
+
+rsync --size-only --ignore-existing -r -t --info=progress2 --progress --chmod=F774,D774 --chown=nas:nas /mnt/src/audio/ /mnt/const/audio/
+
+hdd status
+hdparm -C /dev/sdX
 ___________________________________________________________
 development info:
 
+strace - trace system calls and signals
 ldd - print shared library dependencies (-d for dynamic so)
 readelf -d some.exe - print dependencies
 nm - list symbols from object files
@@ -66,6 +92,10 @@ ipcs -q
 ipcrm -q id
 
 see .so files in a .a file: ar t someLibArchive.a
+
+c++filt
+
+/usr/i586-mingw32msvc/bin/strip yes.exe
 
 ___________________________________________________________
 sys info:
@@ -190,15 +220,56 @@ nc -l 10.115.3.253 45456
 
 sudo tcpdump -i eth1 udp port 50004 -vv -X
 
+IP-forwarding mit masquerading:
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+stop x:
+  fedora
+    init 3
+  suse
+    rcxdm stop
+
+x-forwarding:
+  server:
+    sshd_conf
+      X11Forwarding yes
+      AllowTcpForwarding yes
+    export DISPLAY=client_ip:0.0
+  client:
+    xhost +server_ip
+    ssh -Y user@server_ip executable
+
 ___________________________________________________________
 bash:
 
+somecommand 2> error.log
+somecommand > outputAndError.log 2>&1
+
+stdout & stderr to null:
 cmd &> /dev/null
+
+stdout redir to stderr:
 1>&2
+
+stderr redirected to stdout:
 2>&1
 
+to send stderr to /tmp/errors.log, stdout to /tmp/output.log and both to /tmp/final.log:
+((/path/to/command 2>&1 1>&3 | tee /tmp/errors.log) 3>&1 1>&2 | tee /tmp/output.log) > /tmp/final.log 2>&1
+
+append stdout and stderr to somefile:
+cmd &> - >> somefile
+
+jobcontrol:
+ctrl-z
+bg
+disown
+
+search:
 find / -name "*.txt" -type f -print -exec grep -H "suchtext" {} \;
 find -iname "*.js?" | xargs grep -iR "suchtext"
+grep -i -r suchtext filename
 
 nano /sys/devices/system/cpt/cpu0/cpufreq/scaling-governor
 "ondemand" oder "performance"
@@ -208,8 +279,19 @@ nano /sys/devices/system/cpt/cpu0/cpufreq/scaling-governor
 ~/.bash_history
 
 while true ; do /etc/init.d/absclient start ; sleep 15 ; /etc/init.d/absclient stop ; sleep 4; done
+
 echo blabla >> somefile
 
+screen -S rob
+Ctrl-a, "
+Ctrl-a, c
+Ctrl-a, spacebar
+Ctrl-a, Ctrl-d
+screen -r
+
+count occurrance in file:
+consider multiple occ. in same line: grep -o "string" infile | wc -c
+otherwise: grep -c "string" infile
 
 /etc/init.d/absclient start
 /opt/abs-startup-scripts/
@@ -221,12 +303,45 @@ color output of compile error:
 make 2>&1 | sed -e 's/error:/\ \033[0;31m ERR \033[0m /g'
 doesnt work yet, because needs echo to interpret the color codes
 
+
+do something to every file in folder:
+for i in *
+do
+  echo "smallize $i"
+  convert $i -resize 50% s_$i
+done
+
+__________________________
+benutzerverwaltung:
+
+id
+groups
+w
+who
+whoami
+
+/etc/group
+groupname|password|groupid|memberlist
+
+/etc/gshadow
+grpname|pw|grp-verwalter|memberlist
+
+/etc/passwd
+name|pw|uid|gid|info|homedir|shell
+
+/etc/shadow
+name|pw|date of change|mind|maxd|warn|exp|dis|res
+
 ___________________________________________________________
 gentoo:
 
 rc-update show
 rc-update add pcscd default
 rc-update remove ...
+rcconf (debian)
+
+/var/lib/init.d/started/pcscd
+
 nano /etc/init.d/localmount
 
 glxinfo
@@ -248,7 +363,12 @@ alsamixer -c0
 
 /etc/conf.d/pcsc*
 
+nano /etc/conf.d/local.start
+
 export PAGER='less -s -R'
+
+cat /dev/input/evtouch_event
+
 
 
 ___________________________________________________________
@@ -268,10 +388,31 @@ tar xjrf bla.tbz2 -C /
 
 tarpipe:
 cat somefile.tbz2 | ssh IP "tar -xjp -C /"
-tar cjpf - . --exclude ".svn" --exclude "xulrunner" | ssh IP "tar -xjp -C /home/abs/abs-client"
+tar cjpf - . --exclude ".svn" --exclude "xulrunner" | ssh root@192.168.20.161 "tar -xjp -C /home/abs/abs-client"
+
+workterminal:
+tar -cjpf /data/abs_home.tar.bz2 .
 
 tarcopy:
 tar -cf - <source directory> | (cd /<target directory>;tar -xf -)
+
+single file:
+tar --extract --file={tarball.tar} {file}
+
+verschlüsselung:
+tar -zcf - todays_backup|openssl des3 -salt -k yourpassword | dd of=todays_backup.des3
+
+entschlüsselung:
+dd if= todays_backup.des3 |openssl des3 -d -k yourpassword |tar zxf -
+
+backup:
+date ; dd if=/dev/sda bs=512M conv=noerror | split -d -b 5GB - /media/MONOLITH2/backups/nov_2010/work_sda.img.part
+160GB = 3h20m
+
+join/restore:
+cat file1 file2 > file
+dd if=./file of=/dev/sdb bs=512M
+80GB = 1/2h
 
 ___________________________________________________________
 PXE:
@@ -317,6 +458,27 @@ see binary data: od -v -w16 -tfD somefile
 resize image folder:
 mogrify -resize 600x400 -quality 100 -path ./resized/ *.jpg
 
+ldconfig
+
+__________________________________________________________
+textprocessing:
+
+in zeile [von] [bis], schneide alles nach und incl [=] oder [;] ab und entferne leere zeilen
+sed -e 's/=.*//' -e 's/;.*//' -e '/^$/d' -ne 1503,1753p somefile.txt > out.txt
+
+ersetze pro zeile alle darin vorkommenden [, ] durch [newline] (g wie global)
+sed -ne 's/, /\n/pg' out.txt
+
+__________________________________________________________
+AUTH:
+
+cd /root/.ssh ; ssh-keygen -t dsa -f terminal-key ; cat terminal-key.pub | ssh root@192.168.20.121 "cat >> /root/.ssh/authorized_keys"
+ssh -i /root/.ssh/terminal-key
+
+ssh -o PreferredAuthentications=password root@nasigoreng
+
+ssh-copy-id user@someserver
+
 ___________________________________________________________
 CVS:
 
@@ -334,44 +496,11 @@ unstickie-fy files:
 cvs up -r HEAD
 cvs up -A
 
+__________________________________________________________
+WIN32:
 
-
-___________________________________________________________
-catv4 build:
-
-catdb make
-tools make dep; make
-catkernel make
-axio2 make; make allpc
-catcontrol qmake; make -j4
-catview make
-
-build kernelmodules:
-cd thissite/i386
-sh do2.4.30_smp.sh
-update_appl2003.sh
-reboot
-/etc/init.d/postfix stop
-
-build axio completely:
-make_axioii.sh
-
-burn kernel & ramdisk includes kernelmodules transfer to axio
-
-make desk-sw completely (everything except axio):
-make_cat180.sh
-
-make desk software:
-make_cat180.sh
-ssh root@deska
-ua_cat180.sh doit
-reboot
-update_hella.sh doit
-reboot
-
-note:
-'make catdb' (or 'make generatedb' if you have no database)
-
+runas /user:administrator cmd somePassword
+ewfmgr c: -commit
 
 ___________________________________________________________
 ubuntu:
@@ -386,6 +515,9 @@ dpkg -L packetname
 disable touchpad:
 xinput set-prop 12 "Device Enabled" 0
 xinput --disable 12
+
+update-java-alternatives -l
+update-java-alternatives -s java-6-sun
 
 
 ___________________________________________________________
@@ -421,6 +553,14 @@ git stash   # save current changes to "stash" stack
 git checkout .
 ... do something ...
 git stash apply   # pop changes from stash stack and apply them right here
+
+
+git checkout .
+git add
+git commit
+git pull --rebase
+git push
+git-reset HEAD filename
 
 
 ___________________________________________________________
@@ -462,3 +602,69 @@ disp someVarInScope
 undisplay Number
 
 RETURN repeats last command and TAB-completion exists
+
+
+__________________________________________________________
+SNIFFING:
+
+tcpdump -s 0 -i eth0 -w traffic0.pcap
+
+FEDORA
+
+systemctl enable tomcat.service
+systemctl start tomcat.service
+service postgresql restart
+
+
+arch / systemd
+____________________________________________________________
+ 
+pacman -S packageToInstall
+
+journalctl -b
+
+partclone.btrfs -b -s /dev/sdb -O /dev/sda -R -d
+
+ip address show
+
+sys update: pacman -Syu
+some weird errors:
+pacman-key --refresh-keys
+pacman -Syuw
+rm /etc/ssl/certs/ca-certificates.crt
+pacman -Syu
+
+
+btrfs
+_____________________________________________________________
+
+btrfs scrub [start|status|cancel] /mnt/other
+
+create storage pool:
+btrfs device add /dev/sdX /mnt
+btrfs device add /dev/sdY /mnt
+...
+
+balance between all drives:
+btrfs filesystem balance /mnt
+
+span fs over more drives w different sizes:
+mkfs.btrfs -d single /dev/sdX /dev/sdY ...
+
+incremental backup init:
+btrfs subvolume snapshot -r /home /home/BACKUP; sync
+btrfs send /home/BACKUP | btrfs receive /backup/home
+
+incremental backup iterations:
+btrfs subvolume snapshot -r /home /home/BACKUP-new; sync
+btrfs send -p /home/BACKUP /home/BACKUP-new | btrfs receive /backup/home
+
+then, delete from before local and on backup drive
+btrfs subvolume delete /home/BACKUP
+mv /home/BACKUP-new /home/BACKUP
+btrfs subvolume delete /backup/home/BACKUP
+mv /backup/home/BACKUP-new /backup/home/BACKUP
+
+or keep it around w timestamp
+btrfs subvolume snapshot -r /backup/home/BACKUP /backup/home.$(date +%Y-%m-%d)
+
