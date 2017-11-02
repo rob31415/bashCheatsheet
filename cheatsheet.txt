@@ -1,5 +1,5 @@
 ___________________________________________________________
-files / filesys:
+FILESYS
 
 ls -ltc
 ls -lha
@@ -73,11 +73,13 @@ rsync --size-only --ignore-existing -r -t --info=progress2 --progress --chmod=F7
 
 hdd status
 hdparm -C /dev/sdX
+
 ___________________________________________________________
-development info:
+DEVELOPMENT INFOS
 
 strace - trace system calls and signals
 ldd - print shared library dependencies (-d for dynamic so)
+ldd --version - find glibc version
 readelf -d some.exe - print dependencies
 nm - list symbols from object files
 objdump -T some.exe - list imported symbols
@@ -98,7 +100,7 @@ c++filt
 /usr/i586-mingw32msvc/bin/strip yes.exe
 
 ___________________________________________________________
-sys info:
+SYS INFOS
 
 cat /etc/network/interfaces
 cat /dhcpd3/dhcpdconf
@@ -173,7 +175,7 @@ gdb --pid [pid]
 dump memory /root/output 0x00621000 0x00622000
 
 ___________________________________________________________
-networking:
+NETWORKING
 
 tunneling:
 ssh -L 5900:10.120.150.30:5900 username@125.255.50.60
@@ -240,8 +242,10 @@ x-forwarding:
     xhost +server_ip
     ssh -Y user@server_ip executable
 
+ip address show (the "new ifconfig")
+
 ___________________________________________________________
-bash:
+BASH
 
 somecommand 2> error.log
 somecommand > outputAndError.log 2>&1
@@ -275,19 +279,11 @@ nano /sys/devices/system/cpt/cpu0/cpufreq/scaling-governor
 "ondemand" oder "performance"
 /proc/cpuinfo
 
-
 ~/.bash_history
 
 while true ; do /etc/init.d/absclient start ; sleep 15 ; /etc/init.d/absclient stop ; sleep 4; done
 
 echo blabla >> somefile
-
-screen -S rob
-Ctrl-a, "
-Ctrl-a, c
-Ctrl-a, spacebar
-Ctrl-a, Ctrl-d
-screen -r
 
 count occurrance in file:
 consider multiple occ. in same line: grep -o "string" infile | wc -c
@@ -296,23 +292,32 @@ otherwise: grep -c "string" infile
 /etc/init.d/absclient start
 /opt/abs-startup-scripts/
 
-
 prompt: PS1 in /etc/profile
 
 color output of compile error:
 make 2>&1 | sed -e 's/error:/\ \033[0;31m ERR \033[0m /g'
 doesnt work yet, because needs echo to interpret the color codes
 
-
 do something to every file in folder:
 for i in *
 do
-  echo "smallize $i"
+  echo "processing $i"
   convert $i -resize 50% s_$i
 done
 
+___________________________________________________________
+sefo.sh
+
+#! /bin/bash
+if [ -z $1 ] 
+then
+    echo "SEach FOr code in current folder. usage: sefo.sh searchstring [-i] [-w] - i=ignore case, w=word"
+else
+    grep -rn './' -e "$1" $2 $3 --exclude=\*#* --include=\*.{c*,h,t*,py}|less -S
+fi
+
 __________________________
-benutzerverwaltung:
+USER MANAGEMENT
 
 id
 groups
@@ -333,7 +338,7 @@ name|pw|uid|gid|info|homedir|shell
 name|pw|date of change|mind|maxd|warn|exp|dis|res
 
 ___________________________________________________________
-gentoo:
+GENTOO
 
 rc-update show
 rc-update add pcscd default
@@ -370,9 +375,8 @@ export PAGER='less -s -R'
 cat /dev/input/evtouch_event
 
 
-
 ___________________________________________________________
-tar:
+TAR
 
 pack:
 tar cjpf ../abs_home.tar.bz2 . --exclude ".svn" --exclude "xulrunner"
@@ -415,19 +419,18 @@ dd if=./file of=/dev/sdb bs=512M
 80GB = 1/2h
 
 ___________________________________________________________
-PXE:
-
-pxe-boot-server (20.230):
-gethostip
-/var/lib/tftpboot/pxelinux.cfg/
-
+PXE
 
 nfs-server (20.232):
 /home/linuximage-boot/images
 192.168.20.232:/home/linuximage-boot/AAA-Install/subscripts
 
+pxe-boot-server (20.230):
+gethostip
+/var/lib/tftpboot/pxelinux.cfg/
+
 __________________________________________________________
-MISC:
+MISC
 
 strings /usr/lib/nsbrowser/plugins/libflashplayer.so | grep "LNX"
 date -s "10/20/2000 18:45:01"
@@ -438,7 +441,17 @@ head -2 /proc/slabinfo; cat /proc/slabinfo | egrep dentry\|inode
 cat /proc/$PROC_ID/status
 cat /proc/$PROC_ID/smaps
 
-screen:
+see binary data: od -v -w16 -tfD somefile
+
+resize image folder with image magik:
+mogrify -resize 600x400 -quality 100 -path ./resized/ *.jpg
+instead pixel, you can also say "50%"
+
+ldconfig
+
+__________________________________________________________
+SCREEN
+
 list: screen -ls
 create or reattach to: screen -R rob
 detach: ctrl-a d
@@ -453,15 +466,8 @@ set win name: ctrl-a A
 scroll: ctrl-a ESC
 leave scroll: ESC
 
-see binary data: od -v -w16 -tfD somefile
-
-resize image folder:
-mogrify -resize 600x400 -quality 100 -path ./resized/ *.jpg
-
-ldconfig
-
 __________________________________________________________
-textprocessing:
+TEXTPROCESSING
 
 in zeile [von] [bis], schneide alles nach und incl [=] oder [;] ab und entferne leere zeilen
 sed -e 's/=.*//' -e 's/;.*//' -e '/^$/d' -ne 1503,1753p somefile.txt > out.txt
@@ -470,7 +476,7 @@ ersetze pro zeile alle darin vorkommenden [, ] durch [newline] (g wie global)
 sed -ne 's/, /\n/pg' out.txt
 
 __________________________________________________________
-AUTH:
+AUTH
 
 cd /root/.ssh ; ssh-keygen -t dsa -f terminal-key ; cat terminal-key.pub | ssh root@192.168.20.121 "cat >> /root/.ssh/authorized_keys"
 ssh -i /root/.ssh/terminal-key
@@ -480,36 +486,30 @@ ssh -o PreferredAuthentications=password root@nasigoreng
 ssh-copy-id user@someserver
 
 ___________________________________________________________
-CVS:
+CVS
 
-update to rev:
-cvs up -r revision filename
-
-whats going on:
-cvscheck
-
-get from server, dont merge:
-maybe delete file
-cvs update -C
-
-unstickie-fy files:
-cvs up -r HEAD
-cvs up -A
+update to rev: cvs up -r revision filename
+whats going on: cvscheck
+get from server, dont merge, maybe delete file: cvs update -C
+unstickie-fy files: cvs up -r HEAD ; cvs up -A
 
 __________________________________________________________
-WIN32:
+WIN32
 
 runas /user:administrator cmd somePassword
 ewfmgr c: -commit
 
 ___________________________________________________________
-ubuntu:
+UBUNTU
 
 update:
 apt-get update
 apt-get upgrade
 
-where are files installed:
+which packets are installed:
+dpkg --get-selections
+
+where are files of packet installed:
 dpkg -L packetname
 
 disable touchpad:
@@ -521,29 +521,18 @@ update-java-alternatives -s java-6-sun
 
 
 ___________________________________________________________
-xrandr:
+X11
 
 sudo xrandr --output HDMI1 --primary
 sudo xrandr --output eDP1 --right-of HDMI1
 xrandr --output eDP1 --mode 1920x1080
 setxkbmap de
+search the win-visualId with xwininfo, find rgb masks with xdpyinfo using the visualid
+xvinfo
 
 
 ___________________________________________________________
-sefo.sh
-
-#! /bin/bash
-
-if [ -z $1 ] 
-then
-	echo "SEach FOr code in current folder. usage: sefo.sh searchstring [-i] [-w] - i=ignore case, w=word"
-else
-	grep -rn './' -e "$1" $2 $3 --exclude=\*#* --include=\*.{c*,h,t*}|less -S
-fi
-
-
-___________________________________________________________
-git
+GIT
 
 create new branch and take uncommitted changes over:
 git checkout -b newBranch
@@ -574,12 +563,11 @@ zfs create YOURPOOLNAME/YOURNAME
 mount: sudo zpool import -fa or zpool import YOURPOOLNAME
 unmount: sudo zpool export YOURNAME
 
-list all pools: (first do: zpool import -fa):
-zfs list
+list all pools: (works olny after mountin/importing): zfs list
 
 
-gdb
 ___________________________________________________________
+GDB
 
 compile with -g (CFLAGS =-g in Makefile)
 gdb executable.exe -tui
@@ -605,27 +593,23 @@ RETURN repeats last command and TAB-completion exists
 
 
 __________________________________________________________
-SNIFFING:
+SNIFFING
 
 tcpdump -s 0 -i eth0 -w traffic0.pcap
 
-FEDORA
+
+__________________________________________________________
+SYSTEMD
 
 systemctl enable tomcat.service
 systemctl start tomcat.service
 service postgresql restart
-
-
-arch / systemd
-____________________________________________________________
- 
-pacman -S packageToInstall
-
 journalctl -b
 
-partclone.btrfs -b -s /dev/sdb -O /dev/sda -R -d
+____________________________________________________________
+ARCH
 
-ip address show
+pacman -S packageToInstall
 
 sys update: pacman -Syu
 some weird errors:
@@ -634,9 +618,12 @@ pacman -Syuw
 rm /etc/ssl/certs/ca-certificates.crt
 pacman -Syu
 
-
-btrfs
 _____________________________________________________________
+BTRFS
+
+clone partition:
+partclone.btrfs -b -s /dev/sdb -O /dev/sda -R -d
+attention! do not attach original and cloned drives simultaneously, because they share the same GUID
 
 btrfs scrub [start|status|cancel] /mnt/other
 
@@ -667,4 +654,3 @@ mv /backup/home/BACKUP-new /backup/home/BACKUP
 
 or keep it around w timestamp
 btrfs subvolume snapshot -r /backup/home/BACKUP /backup/home.$(date +%Y-%m-%d)
-
