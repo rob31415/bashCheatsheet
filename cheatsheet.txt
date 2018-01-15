@@ -69,6 +69,10 @@ mount /dev/mapper/loop0p5 /media/hd -o loop,ro
 umount /media/hd
 kpartx -dv hd.img
 
+mount split hd-image:
+affuse mysplitrawimage.001 /mnt/fuse
+mount -o ro,loop,offset=32256,show_sys_files /mnt/fuse/mysplitrawimage.001.raw /mnt/mymountedimage
+
 rsync --size-only --ignore-existing -r -t --info=progress2 --progress --chmod=F774,D774 --chown=nas:nas /mnt/src/audio/ /mnt/const/audio/
 
 hdd status
@@ -244,6 +248,10 @@ x-forwarding:
 
 ip address show (the "new ifconfig")
 
+wifi:
+nmcli c
+nmcli dev wifi connect <SSID> password <password>
+
 ___________________________________________________________
 BASH
 
@@ -304,6 +312,10 @@ do
   echo "processing $i"
   convert $i -resize 50% s_$i
 done
+
+
+calculator:
+echo "3+4"|bc
 
 ___________________________________________________________
 sefo.sh
@@ -617,6 +629,10 @@ pacman-key --refresh-keys
 pacman -Syuw
 rm /etc/ssl/certs/ca-certificates.crt
 pacman -Syu
+
+do this every week to keep rolling released distro up to date:
+update db: pacman -Syy
+update: pacman -Su
 
 _____________________________________________________________
 BTRFS
