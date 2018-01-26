@@ -178,6 +178,73 @@ cat /proc/[pid]/maps
 gdb --pid [pid]
 dump memory /root/output 0x00621000 0x00622000
 
+
+___________________________________________________________
+SYS
+
+modprobe efivars ; ls /sys/firmware/efi # if it exists, system is booted via EFI, BIOS compatibility otherwise
+Align the partitions on 4K boundaries; Keep "bubbles" of 128 MB in size of unallocated space between  adjacent  partitions
+There can be as many EFI partitions as you need. One per disk, or even several on one disk.
+efibootmgr -v # list all efi boot menu entries. works only in EFI boot
+sudo blkid /dev/sda1 # UUID of partition
+ls -l /dev/disk/by-uuid # even better
+
+
+___________________________________________________________
+GRUB
+
+apt-get install grub-efi-amd64-bin -y --force-yes
+
+grub-mkimage \
+  -o ${MOUNTDIR}/EFI/BOOT/bootx64.efi \
+  -d /usr/lib/grub/x86_64-efi \ # location of image modules
+  -p /efi/boot \ # prefix dir
+  -O x86_64-efi \ # format/arch
+    fat iso9660 part_gpt part_msdos normal boot linux configfile loopback chain efifwsetup efi_gop \
+    efi_uga ls search search_label search_fs_uuid search_fs_file gfxterm gfxterm_background \
+    gfxterm_menu test all_video loadenv exfat ext2 ntfs btrfs hfsplus udf \
+    crypto.mod cryptodisk.mod luks.mod
+
+By default grub2 does 2 essential things when starting:
+-set the prefix variable to a value built-in during grub2 installation
+-continue with configuration file $prefix/grub.cfg if it exists
+grub.cfg can also be embedded inside .efi binary (-c switch of grub-mkimage)
+
+boot manually from grub shell:
+ls
+ls (hd0,1)
+cat (hd0,1)/etc/somefile
+set root=(hd0,1)
+linux /boot/vmlinuz-3.13.0-29-generic root=/dev/sda1
+initrd /boot/initrd.img-3.13.0-29-generic
+boot
+
+grub rescue shell:
+grub rescue> set prefix=(hd0,1)/boot/grub
+grub rescue> set root=(hd0,1)
+grub rescue> insmod normal
+grub rescue> normal
+grub rescue> insmod linux
+grub rescue> linux /boot/vmlinuz-3.13.0-29-generic root=/dev/sda1
+grub rescue> initrd /boot/initrd.img-3.13.0-29-generic
+grub rescue> boot
+
+after manual stuff, you can update-grub ; grub-install /dev/sdX
+
+grub2-once number_of_the_boot_entr # Set the default boot entry for the next boot only.
+
+crypto:
+add GRUB_ENABLE_CRYPTODISK=y and GRUB_CMDLINE_LINUX="cryptdevice=/dev/sda1:lvm"
+grub-mkconfig -o grub.cfg ; grub-install /dev/sdX
+
+create LUKS key:
+dd bs=512 count=4 if=/dev/urandom of=/keyfile.raw
+chmod 000 keyfile.raw ; chmod -R -g-rwx,o-rwx /boot
+cryptsetup luksAddKey /dev/sda1 keyfile.raw
+
+add cryptodisk and luks to GRUB_PRELOAD_MODULES in grub.cfg
+
+
 ___________________________________________________________
 NETWORKING
 
@@ -670,3 +737,8 @@ mv /backup/home/BACKUP-new /backup/home/BACKUP
 
 or keep it around w timestamp
 btrfs subvolume snapshot -r /backup/home/BACKUP /backup/home.$(date +%Y-%m-%d)
+
+dont have a cow, man: chattr +C -R dirname ; lsattr
+
+
+
