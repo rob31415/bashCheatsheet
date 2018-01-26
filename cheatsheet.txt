@@ -247,6 +247,8 @@ add cryptodisk and luks to GRUB_PRELOAD_MODULES in grub.cfg
 
 efibootmgr -b <nr> -B # delete efi entry
 efibootmgr -c -d /dev/sdb -p <partitionnr> -L <someLabel> -l /EFI/debian/grubx64.efi
+efibootmgr -v # shows partition unique GUID
+gdisk /dev/sdX followed by "i" and part-nr shows partition unique GUID
 
 ___________________________________________________________
 NETWORKING
