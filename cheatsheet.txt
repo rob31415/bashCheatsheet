@@ -191,7 +191,7 @@ ls -l /dev/disk/by-uuid # even better
 
 
 ___________________________________________________________
-GRUB
+GRUB & EFI
 
 apt-get install grub-efi-amd64-bin -y --force-yes
 
@@ -244,6 +244,9 @@ cryptsetup luksAddKey /dev/sda1 keyfile.raw
 
 add cryptodisk and luks to GRUB_PRELOAD_MODULES in grub.cfg
 
+
+efibootmgr -b <nr> -B # delete efi entry
+efibootmgr -c -d /dev/sdb -p <partitionnr> -L <someLabel> -l /EFI/debian/grubx64.efi
 
 ___________________________________________________________
 NETWORKING
