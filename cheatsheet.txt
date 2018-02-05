@@ -178,6 +178,11 @@ cat /proc/[pid]/maps
 gdb --pid [pid]
 dump memory /root/output 0x00621000 0x00622000
 
+# show hdd health info
+smartctl -l selftest /dev/sdb -d sat  # run self test; -d neccessary if problems with usb-hub
+smartctl -t short /dev/sdb  # run short / long / conveyance test
+smartctl -a /dev/sdb -d sat|less  # see all info
+
 
 ___________________________________________________________
 SYS
